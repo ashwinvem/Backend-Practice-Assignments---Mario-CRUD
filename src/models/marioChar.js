@@ -2,17 +2,17 @@ const mongoose = require("mongoose");
 
 //  Your code goes here
 
-const mario = new mongoose.Schema({
+const marioSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: false
+    default: "Luigi"
   },
   weight: {
     type: Number,
-    required: false
+    default: 60
   }
 });
 
-const marioModel = mongoose.model("marioModel", mario);
+const marioModel = new mongoose.model("mariochar", marioSchema);
 
 module.exports = marioModel;
