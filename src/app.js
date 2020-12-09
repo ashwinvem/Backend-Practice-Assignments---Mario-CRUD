@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const marioModel = require("./models/marioChar");
 
 // Middlewares
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded());
 
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
@@ -12,83 +12,61 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // your code goes here
-// app.get('/',(req,res)=>{
-//     console.log("gi")
-//     res.send("hello World")
-// })
 
-app.get("/mario", (req, res) => {
-  marioModel
-    .find()
-    .then((result) => {
-      res.send(result);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-});
-
-app.get("/mario/:id", (req, res) => {
-  let id = req.params.id;
-  console.log(id);
-  marioModel
-    .findById({ _id: id })
-    .then((result) => {
-      res.send(result);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).send({ message: "error.message" });
-    });
-});
-
-app.post("/mario", (req, res) => {
-  const name = req.body.name;
-  const weight = req.body.weight;
-  if (name === undefined || weight === undefined) {
-    res.status(400).json({ message: "either name or weight is missing" });
-    return;
+app.get("/mario", async (req, res) => {
+  try {
+    const details = await marioModel.find();
+    res.json(details);
+  } catch (error) {
+    res.status(400).send(`error:${error}`);
   }
-  const character = new marioModel({
-    name: name,
-    weight: weight
-  });
-  character
-    .save()
-    .then((result) => {
-      res.status(201).json(req.body);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.send("err");
-    });
 });
 
-app.patch("/mario/:id", function (req, res) {
-  const id = req.params.id;
-  const updateobjec = req.body;
-  marioModel
-    .findByIdAndUpdate({ _id: id }, { $set: updateobjec })
-    .then((result) => {
-      res.status(200).send(result);
-    })
-    .catch((err) => {
-      res.status(400).json({ message: "error.message" });
-    });
+app.get("/mario/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const detailById = await marioModel.findById(_id);
+    res.json(detailById);
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
 });
+app.post("/mario", async (req, res) => {
+  try {
+    if (req.body.name.trim() === "" || req.body.weight < 0) {
+      res.status(400).send({ message: "either name or weight is missing" });
+    }
+  } catch (err) {
+    res.status(400).send({ message: "either name or weight is missing" });
+  }
 
-app.delete("/mario/:id", (req, res) => {
-  const id = req.params.id;
-  marioModel
-    .findByIdAndRemove({ _id: id })
-    .then((result) => {
-      console.log(result);
-      res.status(200).json({ message: "character deleted" });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json({ message: "error.message" });
+  try {
+    const addingChar = new marioModel(req.body);
+    const newChar = await addingChar.save();
+    res.status(201).send(newChar);
+  } catch (error) {
+    res.status(400).send({ message: "either name or weight is missing" });
+  }
+});
+app.patch("/mario/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const updateById = await marioModel.findByIdAndUpdate(_id, req.body, {
+      new: true
     });
+    res.json(updateById);
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+app.delete("/mario/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    await marioModel.findByIdAndDelete(_id);
+    res.json({ message: "character deleted" });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
 });
 
 module.exports = app;
